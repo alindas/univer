@@ -1,25 +1,39 @@
+/**
+ * Copyright 2023-present DreamNum Co., Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import type { ICollaborator } from '@univerjs/protocol';
-import { IAuthzIoService, LocaleService } from '@univerjs/core';
+import { LocaleService } from '@univerjs/core';
 import { Avatar, Button, clsx, Input, scrollbarClassName } from '@univerjs/design';
 import { CheckMarkIcon } from '@univerjs/icons';
 import { UnitRole } from '@univerjs/protocol';
 import { IDialogService, useDependency, useObservable } from '@univerjs/ui';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { UNIVER_SHEET_PERMISSION_USER_DIALOG_ID } from '../../../consts/permission';
 import { SheetPermissionUserManagerService } from '../../../services/permission/sheet-permission-user-list.service';
 import { UserEmptyBase64 } from './constant';
 
 export const SheetPermissionUserDialog = () => {
-    // const [inputValue, setInputValue] = useState('');
-    const [userList, setUserList] = useState<IUser[]>([]);
+    const [inputValue, setInputValue] = useState('');
     const localeService = useDependency(LocaleService);
     const dialogService = useDependency(IDialogService);
-    const authzIoService = useDependency(IAuthzIoService);
     const sheetPermissionUserManagerService = useDependency(SheetPermissionUserManagerService);
-    // const editorList = useObservable(sheetPermissionUserManagerService.userList$, sheetPermissionUserManagerService.userList);
-    // const searchUserList = userList?.filter((item) => {
-    //     return item.subject?.name.toLocaleLowerCase().includes(inputValue.toLocaleLowerCase()) && item.role === UnitRole.Editor;
-    // }) ?? [];
+    const userList = useObservable(sheetPermissionUserManagerService.userList$, sheetPermissionUserManagerService.userList);
+    const searchUserList = userList?.filter((item) => {
+        return item.subject?.name.toLocaleLowerCase().includes(inputValue.toLocaleLowerCase()) && item.role === UnitRole.Editor;
+    }) ?? [];
     const [selectUserInfo, setSelectUserInfo] = useState<ICollaborator[]>(sheetPermissionUserManagerService.selectUserList);
 
     const handleChangeUser = (item: ICollaborator) => {
@@ -33,37 +47,19 @@ export const SheetPermissionUserDialog = () => {
         }
     };
 
-    const handleSearch = useCallback((() => {
-      let timer: any = null;
-      let lastKey: string = ''
-      return (newKey: string) => {
-        lastKey = newKey
-        if (timer) {
-          clearTimeout(timer);
-        }
-        timer = setTimeout(async () => {
-          const userList = await authzIoService.getUserList(newKey)
-          if (newKey != lastKey) {
-            return
-          }
-          setUserList(userList)
-        }, 500);
-      };
-    })(), []);
-
     return (
         <div>
             <div>
                 <Input
                     className="univer-w-full"
                     placeholder={localeService.t('permission.dialog.search')}
-                    // value={inputValue}
-                    onChange={(v) => handleSearch(v)}
+                    value={inputValue}
+                    onChange={(v) => setInputValue(v)}
                 />
             </div>
             <div className={clsx('univer-h-60 univer-overflow-y-auto', scrollbarClassName)}>
-                {userList?.length > 0
-                    ? userList?.map((item) => {
+                {searchUserList?.length > 0
+                    ? searchUserList?.map((item) => {
                         return (
                             <div
                                 key={item.subject?.userID}
