@@ -16,16 +16,23 @@ export const SheetPermissionUserDialog = () => {
     const dialogService = useDependency(IDialogService);
     const authzIoService = useDependency(IAuthzIoService);
     const sheetPermissionUserManagerService = useDependency(SheetPermissionUserManagerService);
+    const editType = sheetPermissionUserManagerService.authzType;
     // const editorList = useObservable(sheetPermissionUserManagerService.userList$, sheetPermissionUserManagerService.userList);
     // const searchUserList = userList?.filter((item) => {
     //     return item.subject?.name.toLocaleLowerCase().includes(inputValue.toLocaleLowerCase()) && item.role === UnitRole.Editor;
     // }) ?? [];
-    const [selectUserInfo, setSelectUserInfo] = useState<ICollaborator[]>(sheetPermissionUserManagerService.selectUserList);
+    const [selectUserInfo, setSelectUserInfo] = useState<ICollaborator[]>(sheetPermissionUserManagerService.selectUserList.map(user => ({
+        ...user, show:editType === 'edit' ? user._role?.includes(UnitRole.Editor) : true
+    })));
 
     const handleChangeUser = (item: ICollaborator) => {
         const index = selectUserInfo?.findIndex((v) => v.subject?.userID === item.subject?.userID);
         if (index === -1) {
-            const select: ICollaborator = { ...item };
+            const select: ICollaborator = {
+                ...item,
+                _role: editType === 'edit' ? [UnitRole.Editor, UnitRole.Reader] : [UnitRole.Reader],
+                show: true
+            };
             setSelectUserInfo([...selectUserInfo, select]);
         } else {
             const newSelectUserInfo = selectUserInfo.filter((v) => v.subject?.userID !== item.subject?.userID);
@@ -75,7 +82,7 @@ export const SheetPermissionUserDialog = () => {
                             >
                                 <Avatar src={item.subject?.avatar} size={24} />
                                 <div className="univer-ml-1.5 univer-flex-1">{item.subject?.name}</div>
-                                {selectUserInfo?.findIndex((v) => v.subject?.userID === item.subject?.userID) !== -1 && (<div><CheckMarkIcon /></div>)}
+                                {selectUserInfo?.findIndex((v) => v.subject?.userID === item.subject?.userID && v.show) !== -1 && (<div><CheckMarkIcon /></div>)}
                             </div>
                         );
                     })
@@ -103,7 +110,10 @@ export const SheetPermissionUserDialog = () => {
                 <Button
                     variant="primary"
                     onClick={() => {
-                        sheetPermissionUserManagerService.setSelectUserList(selectUserInfo);
+                        sheetPermissionUserManagerService.setSelectUserList(selectUserInfo.map(u => {
+                            delete u.show;
+                            return u;
+                        }));
                         dialogService.close(UNIVER_SHEET_PERMISSION_USER_DIALOG_ID);
                     }}
                 >

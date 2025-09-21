@@ -83,7 +83,7 @@ export const PermissionDetailFooterPart = (props: IPermissionDetailFooterPartPro
                     }
 
                     let collaborators = sheetPermissionUserManagerService.selectUserList;
-                    if (activeRule.editState === EditStateEnum.OnlyMe) {
+                    if (activeRule.editState === EditStateEnum.OnlyMe && activeRule.viewState !== 'appointedUserCanView') {
                         collaborators = [];
                         sheetPermissionUserManagerService.setSelectUserList([]);
                     }

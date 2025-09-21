@@ -22,6 +22,7 @@ import { BehaviorSubject, Subject } from 'rxjs';
 export enum ViewStateEnum {
     OthersCanView = 'othersCanView',
     NoOneElseCanView = 'noOneElseCanView',
+    AppointedUserCanView = 'appointedUserCanView',
 }
 
 export enum EditStateEnum {

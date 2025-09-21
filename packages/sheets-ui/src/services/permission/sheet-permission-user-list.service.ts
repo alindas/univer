@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { ICollaborator } from '@univerjs/protocol';
+import { UnitRole, type ICollaborator } from '@univerjs/protocol';
 import { BehaviorSubject } from 'rxjs';
 
 export class SheetPermissionUserManagerService {
@@ -28,8 +28,19 @@ export class SheetPermissionUserManagerService {
     private _selectUserList$ = new BehaviorSubject<ICollaborator[]>(this._selectUserList);
     selectUserList$ = this._selectUserList$.asObservable();
 
+    /** 当前编辑权限的类型，编辑和查看共用了一套数据 selectUserList */
+    private _authzType: 'edit' | 'view' = 'edit'
+
     get userList() {
         return this._userList;
+    }
+
+    get authzType() {
+        return this._authzType;
+    }
+
+    setAuthzType(type: 'edit' | 'view') {
+        this._authzType = type;
     }
 
     // Set all editable users of this unit
@@ -54,6 +65,9 @@ export class SheetPermissionUserManagerService {
     }
 
     get selectUserList() {
+        // if (this._authzType === 'edit') {
+        //     return this._selectUserList.filter(user => user._role.include(UnitRole.Editor));
+        // }
         return this._selectUserList;
     }
 
