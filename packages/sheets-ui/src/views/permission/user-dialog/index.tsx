@@ -4,7 +4,7 @@ import { Avatar, Button, clsx, Input, scrollbarClassName } from '@univerjs/desig
 import { CheckMarkIcon } from '@univerjs/icons';
 import { UnitRole } from '@univerjs/protocol';
 import { IDialogService, useDependency, useObservable } from '@univerjs/ui';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { UNIVER_SHEET_PERMISSION_USER_DIALOG_ID } from '../../../consts/permission';
 import { SheetPermissionUserManagerService } from '../../../services/permission/sheet-permission-user-list.service';
 import { UserEmptyBase64 } from './constant';
@@ -26,8 +26,8 @@ export const SheetPermissionUserDialog = () => {
     })));
 
     const handleChangeUser = (item: ICollaborator) => {
-        const index = selectUserInfo?.findIndex((v) => v.subject?.userID === item.subject?.userID);
-        if (index === -1) {
+        const target = selectUserInfo?.find((v) => v.subject?.userID === item.subject?.userID);
+        if (!target) {
             const select: ICollaborator = {
                 ...item,
                 _role: editType === 'edit' ? [UnitRole.Editor, UnitRole.Reader] : [UnitRole.Reader],
@@ -35,8 +35,14 @@ export const SheetPermissionUserDialog = () => {
             };
             setSelectUserInfo([...selectUserInfo, select]);
         } else {
-            const newSelectUserInfo = selectUserInfo.filter((v) => v.subject?.userID !== item.subject?.userID);
-            setSelectUserInfo(newSelectUserInfo);
+            if (editType === 'edit' && !item?._role?.includes(UnitRole.Editor)) {
+                target._role = [UnitRole.Editor, UnitRole.Reader]
+                target.show = true;
+                setSelectUserInfo([...selectUserInfo])
+            } else {
+                const newSelectUserInfo = selectUserInfo.filter((v) => v.subject?.userID !== item.subject?.userID);
+                setSelectUserInfo(newSelectUserInfo);
+            }
         }
     };
 
@@ -57,6 +63,10 @@ export const SheetPermissionUserDialog = () => {
         }, 500);
       };
     })(), []);
+
+    useEffect(() => {
+        handleSearch('')
+    }, []);
 
     return (
         <div>
